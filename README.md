@@ -8,12 +8,12 @@ A Retrieval-Augmented Generation (RAG) tool designed to help legal and medical p
 - Vector Database: ChromaDB
 - Frontend: Streamlit
 
-## Project Structure
+## Structure
 - `/src/backend`: Core RAG logic and embedding generation.
 - `/src/frontend`: Streamlit UI components.
 - `/data`: Sample legal contracts and medical reports for testing.
 
-## Key Features
-- Accurate Retrieval: Uses semantic search to find relevant document chunks.
+## Features
+- Accurate Retrieval: Uses logical searches to find relevant document chunks.
 - Citation Support: Returns the specific page number for every answer.
-- Hallucination Check: Engineered to strictly answer from the provided context.
+- Hallucination Check: Engineered to strictly answer from the provided context. If answer not found, no answer will be given.
