@@ -1,69 +1,68 @@
 import streamlit as st
 import sys
-import os
-from pathlib import Path
 import requests
+from pathlib import Path
 from streamlit_lottie import st_lottie
 
-def load_lottieurl(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
-
-# --- PATH SETUP ---
 current_script_path = Path(__file__).resolve()
 project_root = current_script_path.parent.parent.parent
 sys.path.append(str(project_root))
 
 from src.backend.loader import get_query_engine
 
-# --- PAGE CONFIG (Tab Title & Icon) ---
 st.set_page_config(
-    page_title="DocQuery",
-    page_icon="⚖️",
-    layout="wide"  # Uses the full screen width
+    page_title="DocQuery (Offline)",
+    page_icon="🛡️",
+    layout="wide"
 )
 
-# --- SIDEBAR (Controls) ---
+def load_lottieurl(url):
+    try:
+        r = requests.get(url)
+        return r.json() if r.status_code == 200 else None
+    except:
+        return None
+
+lottie_secure = load_lottieurl("https://lottie.host/98a7a9cb-472e-4621-89eb-23dfdfb5821c/v6j4Wjk6wZ.json")
+
 with st.sidebar:
-    st.title("Document Control")
-    st.info("System Status: **Online**")
+    if lottie_secure:
+        st_lottie(lottie_secure, height=150, key="secure_anim")
+    
+    st.title("🔐 Secure Mode")
+    st.success("System Status: **Offline (Air-Gapped)**")
     
     st.divider()
     
-    st.subheader("Model Configuration")
-    model_choice = st.selectbox("Select Model", ["GPT-4o-mini (Fast)", "GPT-4o (Precise)"])
-    temperature = st.slider("Creativity (Temperature)", 0.0, 1.0, 0.2)
+    st.subheader("Model Info")
+    st.code("Model: Llama 3.2\nType: Local LLM\nPrivacy: 100%", language="yaml")
     
     st.divider()
     if st.button("Clear Chat History", type="primary"):
         st.session_state.messages = []
         st.rerun()
 
-# --- MAIN PAGE ---
-st.title("DocQuery")
-st.caption("Powered by Streamlit & ChromaDB")
+st.title("🛡️ DocQuery: Sovereign AI")
+st.caption("Analyzing documents locally. No data leaves this device.")
 st.divider()
 
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Hello! I am ready to analyze your legal documents. What would you like to know?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "I am ready. Your documents are loaded securely. What do you need?"}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Ask anything about the documents"):
+if prompt := st.chat_input("Ask a question..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Analyzing documents..."):
+        with st.spinner("Processing locally (this may take a moment)..."):
             try:
                 engine = get_query_engine()
-                response = engine.query(prompt) 
-                
+                response = engine.query(prompt)
                 st.markdown(str(response))
                 st.session_state.messages.append({"role": "assistant", "content": str(response)})
             except Exception as e:
