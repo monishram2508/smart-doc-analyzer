@@ -29,7 +29,7 @@ with st.sidebar:
     if lottie_secure:
         st_lottie(lottie_secure, height=150, key="secure_anim")
     
-    st.title("🔐 Secure Mode")
+    st.title("Secure Mode")
     st.success("System Status: **Offline (Air-Gapped)**")
     
     st.divider()
@@ -42,7 +42,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-st.title("🛡️ DocQuery: Sovereign AI")
+st.title("DocQuery: Sovereign AI")
 st.caption("Analyzing documents locally. No data leaves this device.")
 st.divider()
 
@@ -53,17 +53,34 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Ask a question..."):
+
+if prompt := st.chat_input("Ask a question"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Processing locally (this may take a moment)..."):
+        response_placeholder = st.empty()
+        full_response = ""
+        
+        with st.status("Activating AI Brain", expanded=True) as status:
             try:
+                st.write("Connecting to Local Database")
                 engine = get_query_engine()
-                response = engine.query(prompt)
-                st.markdown(str(response))
-                st.session_state.messages.append({"role": "assistant", "content": str(response)})
+                
+                st.write("Reading Documents...")
+                streaming_response = engine.query(prompt)
+                
+                status.update(label="Found answer. Generating text.", state="complete", expanded=False)
+                
+                for token in streaming_response.response_gen:
+                    full_response += token
+                    response_placeholder.markdown(full_response + "▌")
+                
+                response_placeholder.markdown(full_response)
+                
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+
             except Exception as e:
+                status.update(label="Error", state="error")
                 st.error(f"Error: {e}")

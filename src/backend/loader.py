@@ -22,4 +22,4 @@ def get_query_engine():
     index = VectorStoreIndex.from_vector_store(
         vector_store,
     )
-    return index.as_query_engine()
+    return index.as_query_engine(streaming=True)
